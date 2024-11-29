@@ -18,7 +18,7 @@ export function NowPlayingBar() {
                     </div>
                     <div>
                         <h3 className="text-sm font-medium">{currentTrack.title}</h3>
-                        <p className="text-xs text-neutral-400">{currentTrack.artist}</p>
+                        <p className="text-xs text-neutral-400">{currentTrack.artists}</p>
                     </div>
                 </div>
 

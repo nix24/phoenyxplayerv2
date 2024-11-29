@@ -3,9 +3,11 @@
 import { tracks } from "./lib/testData";
 import { usePlayerStore } from "@/app/lib/stores/usePlayerStore";
 import { NowPlayingBar } from "@/app/components/NowPlayingBar";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { AudioUploader } from "./components/AudioUploader";
 import type { Track } from "@prisma/client";
+import { set } from "zod";
+import { TrackDropdown } from "./components/TrackDropdown";
 
 export default function Home() {
     const { playTrack, setQueue } = usePlayerStore();
@@ -13,37 +15,52 @@ export default function Home() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchTracks = async () => {
-            try {
-                const response = await fetch('/api/tracks');
-                if (!response.ok) throw new Error('Failed to fetch tracks');
-                const data = await response.json();
+    const refreshTracks = useCallback(async () => {
+        setLoading(true);
+        try {
+            const response = await fetch('/api/tracks');
+            if (!response.ok) throw new Error('Failed to fetch tracks');
+            const data = await response.json();
 
-                const formattedTracks = data.map((track: Track) => ({
-                    id: track.id,
-                    url: `/api/tracks/${track.id}/audio`, // URL to stream the audio
-                    title: track.title,
-                    artists: JSON.parse(track.artists) as string[], // Parsing artists as an array of strings
-                    tags: JSON.parse(track.tags),
-                    fileSize: track.fileSize === null ? undefined : track.fileSize,
+            const formattedTracks = data.map((track: Track) => ({
+                id: track.id,
+                url: `/api/tracks/${track.id}/audio`, // URL to stream the audio
+                title: track.title,
+                artists: typeof track.artists === 'string'
+                    ? track.artists  // If it's already a string, keep it
+                    : Array.isArray(track.artists)
+                        ? track.artists
+                        : JSON.parse(track.artists), // Parse only if needed                tags: JSON.parse(track.tags),
+                fileSize: track.fileSize === null ? undefined : track.fileSize,
 
-                }));
+            }));
 
-                setTracks(formattedTracks);
-                setQueue(formattedTracks);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to load tracks');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchTracks();
+            setTracks(formattedTracks);
+            setQueue(formattedTracks);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to load tracks');
+        } finally {
+            setLoading(false);
+        }
     }, [setQueue]);
+
+    useEffect(() => {
+        refreshTracks();
+    }, [refreshTracks]);
+
+    const handleDelete = async (trackId: string) => {
+        try {
+            const response = await fetch(`/api/tracks/${trackId}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error('Failed to delete track');
+            refreshTracks();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to delete track');
+        }
+    };
 
     if (loading) return <div className="p-6">Loading tracks...</div>;
     if (error) return <div className="p-6 text-red-500">Error: {error}</div>;
+
     return (
         <main className="min-h-screen pb-24">
             <header className="p-6">
@@ -90,12 +107,23 @@ export default function Home() {
                                     }
                                 }}
                             >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-neutral-700 rounded" />
-                                    <div>
-                                        <p className="font-medium">{track.title}</p>
-                                        <p className="text-sm text-neutral-400">{track.artists}</p>
+                                <div className="flex items-center justify-between">
+
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-neutral-700 rounded" />
+                                        <div>
+                                            <p className="font-medium">{track.title}</p>
+                                            <p className="text-sm text-neutral-400">
+                                                {Array.isArray(track.artists)
+                                                    ? track.artists.join(', ')
+                                                    : track.artists}
+                                            </p>
+                                        </div>
                                     </div>
+                                    <TrackDropdown
+                                        track={track}
+                                        onDelete={() => handleDelete(track.id)}
+                                    />
                                 </div>
                             </li>
                         ))}
@@ -127,7 +155,7 @@ export default function Home() {
                             className="block p-4 bg-neutral-800 rounded-lg cursor-pointer transition"
                         >
                             Upload individual Files
-                            <AudioUploader />
+                            <AudioUploader onUploadComplete={refreshTracks} />
                         </label>
                     </div>
                 </div>

@@ -3,7 +3,10 @@
 import { useState } from 'react';
 import { usePlayerStore } from '../lib/stores/usePlayerStore';
 
-export function AudioUploader() {
+interface AudioUploaderProps {
+    onUploadComplete: () => void;
+}
+export function AudioUploader({ onUploadComplete }: AudioUploaderProps) {
     const [metadata, setMetadata] = useState<string>('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -28,10 +31,7 @@ export function AudioUploader() {
             if (!response.ok) {
                 throw new Error('Upload failed');
             }
-            //refresh track list after successful upload
-            const tracksResponse = await fetch('/api/tracks')
-            const tracks = await tracksResponse.json()
-            setQueue(tracks)
+            onUploadComplete?.();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to upload file');
         } finally {
