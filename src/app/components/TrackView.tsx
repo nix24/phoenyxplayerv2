@@ -46,7 +46,7 @@ export function TrackView({ track }: { track: Track }) {
                     alt={track.title}
                     fill={true}
 
-                    className="rounded w-48 h-48 object-cover"
+                    className="rounded-sm w-48 h-48 object-cover"
                 />
 
                 {/* Track info */}

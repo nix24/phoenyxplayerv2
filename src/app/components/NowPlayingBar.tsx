@@ -17,7 +17,7 @@ export function NowPlayingBar() {
                     <Image
                         src={currentTrack.thumbnailUrl || '/default-thumbnail.png'}
                         alt={currentTrack.title}
-                        className="w-12 h-12 rounded"
+                        className="w-12 h-12 rounded-sm"
                     />
                     <div>
                         <h3 className="text-sm font-medium">{currentTrack.title}</h3>

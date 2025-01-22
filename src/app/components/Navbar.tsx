@@ -19,7 +19,7 @@ export function Navbar() {
                         </svg>
                     </summary>
                     <ul
-                        className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
+                        className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow-sm">
                         <li><a href="/">Home</a></li>
                         <li><a href="/">Portfolio</a></li>
                         <li><a href="/">About</a></li>

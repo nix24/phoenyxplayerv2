@@ -114,7 +114,7 @@ export default function Home() {
                                             alt={track.title}
                                             width={48}
                                             height={48}
-                                            className="rounded"
+                                            className="rounded-sm"
                                         />
                                         <div>
                                             <Link href={`/tracks/${track.id}`} className="font-medium hover:underline transition">{track.title}</Link>
