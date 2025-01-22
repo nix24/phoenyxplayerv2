@@ -6,7 +6,7 @@ export async function GET(
     context: { params: { id: string } }
 ) {
     // Await context.params to ensure it's properly resolved
-    const { params } = context;
+    const params = await context.params;
     const { id } = params;
 
     try {

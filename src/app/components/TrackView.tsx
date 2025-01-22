@@ -36,7 +36,7 @@ export function TrackView({ track }: { track: Track }) {
             playTrack(track);
         }
     };
-
+    
     return (
         <div className="max-w-4xl mx-auto p-6 space-y-8">
             <div className="flex items-center gap-8">
@@ -44,9 +44,9 @@ export function TrackView({ track }: { track: Track }) {
                 <Image
                     src={track.thumbnailUrl || '/default-thumbnail.png'}
                     alt={track.title}
-                    fill={true}
-
-                    className="rounded-sm w-48 h-48 object-cover"
+                    width={192}
+                    height={192}
+                    className="rounded-sm object-cover"
                 />
 
                 {/* Track info */}
