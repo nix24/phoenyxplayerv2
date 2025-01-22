@@ -1,28 +1,52 @@
-// app/api/upload/route.ts
 import { type NextRequest, NextResponse } from 'next/server';
 import * as mm from 'music-metadata';
 import { prisma } from '@/app/lib/prisma';
+import sharp from 'sharp';
 
 export async function POST(request: NextRequest) {
     try {
-        console.log('Received request:', request);
         const data = await request.formData();
-        console.log('Form data:', data);
         const file: File | null = data.get('file') as unknown as File;
+        const customThumbnail: File | null = data.get('thumbnail') as unknown as File;
 
         if (!file) {
-            console.log('No file received');
             return NextResponse.json(
-                { error: 'No file received' },
+                { error: 'No audio file received' },
                 { status: 400 }
             );
         }
 
-        const bytes = await file.arrayBuffer()
-        const buffer = Buffer.from(bytes);
+        // Process audio file
+        const audioBytes = await file.arrayBuffer();
+        const audioBuffer = Buffer.from(audioBytes);
+        const metadata = await mm.parseBuffer(audioBuffer);
 
-        const metadata = await mm.parseBuffer(buffer)
+        // Handle thumbnail
+        let thumbnail: Buffer | undefined;
+        let thumbnailType: string | undefined;
 
+        if (customThumbnail) {
+            // If a custom thumbnail was uploaded, process it
+            const thumbBytes = await customThumbnail.arrayBuffer();
+            const thumbBuffer = Buffer.from(thumbBytes);
+            
+            // Process with sharp to ensure it's a valid image and resize if needed
+            thumbnail = await sharp(thumbBuffer)
+                .resize(300, 300, { fit: 'cover' })
+                .jpeg({ quality: 80 })
+                .toBuffer();
+            thumbnailType = 'image/jpeg';
+        } else if (metadata.common.picture && metadata.common.picture.length > 0) {
+            // Fall back to embedded artwork if available
+            const rawThumb = metadata.common.picture[0];
+            thumbnail = await sharp(rawThumb.data)
+                .resize(300, 300, { fit: 'cover' })
+                .jpeg({ quality: 80 })
+                .toBuffer();
+            thumbnailType = 'image/jpeg';
+        }
+
+        // Create track in database
         const track = await prisma.track.create({
             data: {
                 id: crypto.randomUUID(),
@@ -30,18 +54,26 @@ export async function POST(request: NextRequest) {
                 artists: JSON.stringify([metadata.common.artist || 'Unknown']),
                 tags: JSON.stringify(metadata.common.genre || []),
                 fileSize: file.size,
-                data: buffer
+                data: audioBuffer,
+                ...(thumbnail && {
+                    thumbnail,
+                    thumbnailType
+                })
             }
-        })
+        });
+
+        // Remove binary data from response
+        const { data: _data, thumbnail: _thumbnail, ...safeTrack } = track;
+
         return NextResponse.json({
             success: true,
-            track
+            track: safeTrack
         });
 
     } catch (error) {
         console.error('Upload error:', error);
         return NextResponse.json(
-            { error: 'Failed to process file' },
+            { error: 'Failed to process upload' },
             { status: 500 }
         );
     }

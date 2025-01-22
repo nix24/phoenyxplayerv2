@@ -2,6 +2,7 @@
 
 import { usePlayerStore } from '@/app/lib/stores/usePlayerStore';
 import { formatTime } from '@/app/lib/util';
+import Image from 'next/image';
 
 export function NowPlayingBar() {
     const { currentTrack, isPlaying, progress, duration, play, pause, playPrevious, playNext, setProgress } = usePlayerStore();
@@ -13,9 +14,11 @@ export function NowPlayingBar() {
             <div className="flex items-center justify-between h-full px-4">
                 {/* Track Info */}
                 <div className="flex items-center gap-4 w-1/3">
-                    <div className="w-16 h-16 bg-neutral-800 rounded">
-                        {/* Placeholder for album art */}
-                    </div>
+                    <Image
+                        src={currentTrack.thumbnailUrl || '/default-thumbnail.png'}
+                        alt={currentTrack.title}
+                        className="w-12 h-12 rounded"
+                    />
                     <div>
                         <h3 className="text-sm font-medium">{currentTrack.title}</h3>
                         <p className="text-xs text-neutral-400">{currentTrack.artists}</p>

@@ -3,8 +3,9 @@ import { prisma } from '@/app/lib/prisma';
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: { id: string } }
 ) {
+    const { params } = await context;
     try {
         await prisma.track.delete({
             where: { id: params.id }

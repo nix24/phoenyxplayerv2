@@ -18,4 +18,6 @@ model Track {
   tags     String   // Stored as JSON array string
   fileSize Int?
   data     Bytes    // mp3 file
+  thumbnail Bytes?  // image file
+  thumbnailType String? //mime type
 }

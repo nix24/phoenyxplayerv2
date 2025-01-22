@@ -6,4 +6,5 @@ export interface Track {
     artists: string | string[];
     tags: string | string[];
     fileSize?: number | null;
+    thumbnailUrl?: string | null;
 }

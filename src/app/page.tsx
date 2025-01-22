@@ -1,13 +1,13 @@
 'use client';
 
-import { tracks } from "./lib/testData";
 import { usePlayerStore } from "@/app/lib/stores/usePlayerStore";
 import { NowPlayingBar } from "@/app/components/NowPlayingBar";
 import { useEffect, useState, useCallback } from "react";
 import { AudioUploader } from "./components/AudioUploader";
-import type { Track } from "@prisma/client";
-import { set } from "zod";
 import { TrackDropdown } from "./components/TrackDropdown";
+import Link from "next/link";
+import Image from "next/image";
+import type { Track } from "@/app/lib/types";
 
 export default function Home() {
     const { playTrack, setQueue } = usePlayerStore();
@@ -24,13 +24,12 @@ export default function Home() {
 
             const formattedTracks = data.map((track: Track) => ({
                 id: track.id,
-                url: `/api/tracks/${track.id}/audio`, // URL to stream the audio
+                url: `/api/tracks/${track.id}/audio`,
+                // URL to stream the audio
+                thumbnailUrl: `/api/tracks/${track.id}/thumbnail`,
                 title: track.title,
-                artists: typeof track.artists === 'string'
-                    ? track.artists  // If it's already a string, keep it
-                    : Array.isArray(track.artists)
-                        ? track.artists
-                        : JSON.parse(track.artists), // Parse only if needed                tags: JSON.parse(track.tags),
+                artists: Array.isArray(track.artists) ? track.artists : JSON.parse(track.artists), // Parse only if needed
+                tags: Array.isArray(track.tags) ? track.tags : JSON.parse(track.tags),
                 fileSize: track.fileSize === null ? undefined : track.fileSize,
 
             }));
@@ -110,9 +109,15 @@ export default function Home() {
                                 <div className="flex items-center justify-between">
 
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-neutral-700 rounded" />
+                                        <Image
+                                            src={track.thumbnailUrl || '/default-thumbnail.png'}
+                                            alt={track.title}
+                                            width={48}
+                                            height={48}
+                                            className="rounded"
+                                        />
                                         <div>
-                                            <p className="font-medium">{track.title}</p>
+                                            <Link href={`/tracks/${track.id}`} className="font-medium hover:underline transition">{track.title}</Link>
                                             <p className="text-sm text-neutral-400">
                                                 {Array.isArray(track.artists)
                                                     ? track.artists.join(', ')
