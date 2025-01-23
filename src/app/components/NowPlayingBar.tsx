@@ -20,7 +20,7 @@ export function NowPlayingBar() {
 	if (!currentTrack) return null;
 
 	return (
-		<div className="fixed bottom-0 left-0 right-0 h-24 bg-neutral-900 border-t border-neutral-800">
+		<div className="fixed bottom-0 left-0 right-0 h-24 bg-base-300 rounded-t-lg">
 			<div className="flex items-center justify-between h-full px-4">
 				{/* Track Info */}
 				<div className="flex items-center gap-4 w-1/3">
@@ -31,9 +31,13 @@ export function NowPlayingBar() {
 						height={48}
 						className="w-12 h-12 rounded-sm"
 					/>
-					<div>
-						<h3 className="text-sm font-medium">{currentTrack.title}</h3>
-						<p className="text-xs text-neutral-400">{currentTrack.artists}</p>
+					<div className="w-40">
+						<h3 className="text-sm text-base-content font-medium truncate">
+							{currentTrack.title}
+						</h3>
+						<p className="text-xs text-base-content/70 truncate">
+							{currentTrack.artists}
+						</p>
 					</div>
 				</div>
 
@@ -42,8 +46,8 @@ export function NowPlayingBar() {
 					<div className="flex items-center gap-4">
 						<button
 							type="button"
-							onClick={() => playPrevious()}
-							className="text-neutral-400 hover:text-white"
+							onClick={playPrevious}
+							className="text-base-content hover:text-accent transition"
 						>
 							<svg
 								className="w-5 h-5"
@@ -63,8 +67,8 @@ export function NowPlayingBar() {
 
 						<button
 							type="button"
-							onClick={() => (isPlaying ? pause() : play())}
-							className="p-2 rounded-full bg-white text-black hover:scale-105 transition"
+							onClick={isPlaying ? pause : play}
+							className="p-2 rounded-full bg-base-content text-base-300 hover:scale-105 transition"
 						>
 							{isPlaying ? (
 								<svg
@@ -99,8 +103,8 @@ export function NowPlayingBar() {
 
 						<button
 							type="button"
-							onClick={() => playNext()}
-							className="text-neutral-400 hover:text-white"
+							onClick={playNext}
+							className="text-base-content hover:text-accent transition"
 						>
 							<svg
 								className="w-5 h-5"
@@ -120,7 +124,7 @@ export function NowPlayingBar() {
 					</div>
 
 					{/* Progress Bar */}
-					<div className="w-full mt-2 flex items-center gap-2 text-xs text-neutral-400">
+					<div className="w-full mt-2 flex items-center gap-2 text-xs text-base-content">
 						<span>{formatTime(progress)}</span>
 						<div className="relative flex-1 h-1 group">
 							<input
@@ -131,9 +135,9 @@ export function NowPlayingBar() {
 								onChange={(e) => setProgress(Number.parseFloat(e.target.value))}
 								className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
 							/>
-							<div className="absolute inset-0 h-1 bg-neutral-800 rounded-full">
+							<div className="absolute inset-0 h-1 bg-base-100 rounded-full">
 								<div
-									className="h-full bg-white rounded-full group-hover:bg-green-500 transition-colors"
+									className="h-full bg-primary rounded-full group-hover:bg-secondary transition-colors"
 									style={{ width: `${(progress / duration) * 100}%` }}
 								/>
 							</div>

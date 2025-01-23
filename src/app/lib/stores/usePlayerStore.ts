@@ -77,7 +77,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
                     }
                 }, 1000);
             },
-            onpause: () => set({ isPlaying: false }),
+            onpause: () => {
+                const currentProgress = howl.seek();
+                set({ isPlaying: false, progress: currentProgress });
+            },
             onstop: () => set({ isPlaying: false, progress: 0 }),
             onend: () => {
                 set({ isPlaying: false, progress: 0 });
@@ -110,10 +113,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     },
 
     setProgress: (time) => {
-        const { howl } = get();
+        const { howl, isPlaying } = get();
         if (howl) {
             howl.seek(time);
             set({ progress: time });
+            if (isPlaying) {
+                howl.play();
+            }
         }
     },
 

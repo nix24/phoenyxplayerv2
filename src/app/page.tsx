@@ -60,52 +60,78 @@ export default function Home() {
 		}
 	};
 
-	if (loading) return <div className="p-6">Loading tracks...</div>;
-	if (error) return <div className="p-6 text-red-500">Error: {error}</div>;
+	if (loading)
+		return (
+			<div className="min-h-screen flex items-center justify-center">
+				<span className="loading loading-spinner loading-lg text-primary" />
+			</div>
+		);
+
+	if (error)
+		return (
+			<div className="min-h-screen flex items-center justify-center">
+				<div className="alert alert-error">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						className="stroke-current shrink-0 h-6 w-6"
+						fill="none"
+						viewBox="0 0 24 24"
+					>
+						<title>Error</title>
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							strokeWidth="2"
+							d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+						/>
+					</svg>
+					<span>{error}</span>
+				</div>
+			</div>
+		);
 
 	return (
-		<main className="min-h-screen pb-24">
-			<pre>{JSON.stringify(queue, null, 2)}</pre>
-			<header className="p-6">
-				<p className="text-sm text-neutral-400 mb-4">
-					Disclaimer: This app is still in early stages of development. Feel
-					free to check out the code on{" "}
-					<a
-						href="https://github.com/nix24/phoenixPlayer"
-						className="underline hover:text-white"
-					>
-						github!
-					</a>
-				</p>
-
-				<h1 className="text-2xl font-bold">Songs</h1>
-			</header>
-
-			<div className="px-6">
-				<section aria-live="polite" className="mb-6">
-					<div>
-						<form>
-							<label htmlFor="search" className="sr-only">
-								Search the library
-							</label>
-							<input
-								type="search"
-								id="search"
-								className="w-full px-4 py-2 bg-neutral-800 rounded-lg"
-								placeholder="Search the library..."
-							/>
-						</form>
+		<main className="min-h-screen pb-24 bg-base-100">
+			<div className="container mx-auto px-4">
+				<div className="form-control w-full max-w-2xl mx-auto my-6">
+					<div className="input-group flex flex-row">
+						<input
+							type="search"
+							id="search"
+							className="input input-bordered w-full"
+							placeholder="Search the library..."
+						/>
+						<button className="btn btn-square" type="submit">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								className="h-6 w-6"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
+								<title>Search</title>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth="2"
+									d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+								/>
+							</svg>
+						</button>
 					</div>
-				</section>
+				</div>
 
-				<hr className="border-neutral-800 my-6" />
+				<div className="divider" />
 
-				<section>
-					<ul className="space-y-2">
+				<section className="max-w-4xl mx-auto">
+					<ul className="list bg-base-100 rounded-box shadow-md">
+						<li className="p-4 pb-2 text-xs opacity-60 tracking-wide">
+							Most played songs this week
+						</li>
 						{tracks.map((track) => (
 							<li
 								key={track.id}
-								className="p-4 rounded-lg hover:bg-neutral-800 transition cursor-pointer"
+								className="list-row cursor-pointer hover:bg-base-300 transition-all"
 								onClick={() => playTrack(track)}
 								onKeyUp={(e) => {
 									if (e.key === "Enter" || e.key === " ") {
@@ -113,30 +139,28 @@ export default function Home() {
 									}
 								}}
 							>
-								<div className="flex items-center justify-between">
-									<div className="flex items-center gap-4">
-										<Image
-											src={track.thumbnailUrl || "/default-thumbnail.png"}
-											alt={track.title}
-											width={48}
-											height={48}
-											sizes="100vw"
-											className="rounded-sm object-cover"
-										/>
-										<div>
-											<Link
-												href={`/tracks/${track.id}`}
-												className="font-medium hover:underline transition"
-											>
-												{track.title}
-											</Link>
-											<p className="text-sm text-neutral-400">
-												{Array.isArray(track.artists)
-													? track.artists.join(", ")
-													: track.artists}
-											</p>
-										</div>
-									</div>
+								<div>
+									<img
+										className="w-16 h-16 rounded-lg object-cover"
+										src={track.thumbnailUrl || "/default-thumbnail.png"}
+										alt={track.title}
+									/>
+								</div>
+								<div>
+									<Link
+										href={`/tracks/${track.id}`}
+										className="hover:text-primary transition-colors"
+										onClick={(e) => e.stopPropagation()}
+									>
+										{track.title}
+									</Link>
+									<p className="text-sm opacity-70">
+										{Array.isArray(track.artists)
+											? track.artists.join(", ")
+											: track.artists}
+									</p>
+								</div>
+								<div className="list-col-grow flex justify-end">
 									<TrackDropdown
 										track={track}
 										onDelete={() => handleDelete(track.id)}
@@ -148,36 +172,7 @@ export default function Home() {
 				</section>
 			</div>
 
-			<aside className="px-6 mt-8">
-				<div className="space-y-4">
-					<div>
-						<label
-							htmlFor="directory-upload"
-							className="block p-4 bg-neutral-800 rounded-lg cursor-pointer hover:bg-neutral-700 transition"
-						>
-							Upload from Directory
-							<input
-								type="file"
-								id="directory-upload"
-								accept="audio/*"
-								multiple
-								className="hidden"
-							/>
-						</label>
-					</div>
-
-					<div>
-						<label
-							htmlFor="file-upload"
-							className="block p-4 bg-neutral-800 rounded-lg cursor-pointer transition"
-						>
-							Upload individual Files
-							<AudioUploader onUploadComplete={refreshTracks} />
-						</label>
-					</div>
-				</div>
-			</aside>
-
+			<AudioUploader onUploadComplete={refreshTracks} />
 			<NowPlayingBar />
 		</main>
 	);
