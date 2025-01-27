@@ -10,8 +10,10 @@
 	},
 	"dependencies": {
 		"@prisma/client": "^5.22.0",
+		"@types/flexsearch": "^0.7.6",
 		"@types/howler": "^2.2.12",
 		"@types/sharp": "^0.31.1",
+		"flexsearch": "^0.7.43",
 		"howler": "^2.2.4",
 		"lucide-react": "^0.473.0",
 		"music-metadata": "10.7.0",

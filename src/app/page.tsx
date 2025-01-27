@@ -5,6 +5,7 @@ import { NowPlayingBar } from "@/app/components/NowPlayingBar";
 import { useEffect, useState, useCallback } from "react";
 import { AudioUploader } from "./components/AudioUploader";
 import { TrackDropdown } from "./components/TrackDropdown";
+import { SearchBar } from "./components/SearchBar";
 import Link from "next/link";
 import Image from "next/image";
 import type { Track } from "@/app/lib/types";
@@ -13,6 +14,7 @@ import { SearchIcon } from "lucide-react";
 export default function Home() {
 	const { playTrack, setQueue, queue } = usePlayerStore();
 	const [tracks, setTracks] = useState<Track[]>([]);
+	const [filteredTracks, setFilteredTracks] = useState<Track[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
@@ -26,24 +28,23 @@ export default function Home() {
 			const formattedTracks = data.map((track: Track) => ({
 				id: track.id,
 				url: `/api/tracks/${track.id}/audio`,
-				// URL to stream the audio
 				thumbnailUrl: `/api/tracks/${track.id}/thumbnail`,
 				title: track.title,
 				artists: Array.isArray(track.artists)
 					? track.artists
-					: JSON.parse(track.artists), // Parse only if needed
+					: JSON.parse(track.artists),
 				tags: Array.isArray(track.tags) ? track.tags : JSON.parse(track.tags),
 				fileSize: track.fileSize === null ? undefined : track.fileSize,
 			}));
 
 			setTracks(formattedTracks);
-			setQueue(formattedTracks);
+			setFilteredTracks(formattedTracks);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "Failed to load tracks");
 		} finally {
 			setLoading(false);
 		}
-	}, [setQueue]);
+	}, []);
 
 	useEffect(() => {
 		refreshTracks();
@@ -94,20 +95,7 @@ export default function Home() {
 	return (
 		<main className="min-h-screen pb-24 bg-base-100">
 			<div className="container mx-auto px-4">
-				<div className="form-control w-full max-w-2xl mx-auto my-6">
-					<div className="input-group flex flex-row">
-						<input
-							type="search"
-							id="search"
-							className="input input-bordered w-full"
-							placeholder="Search the library..."
-						/>
-						<button className="btn btn-square" type="submit">
-							<SearchIcon className="h-6 w-6" />
-						</button>
-					</div>
-				</div>
-
+				<SearchBar tracks={tracks} onSearchResults={setFilteredTracks} />
 				<div className="divider" />
 
 				<section className="max-w-4xl mx-auto">
@@ -115,46 +103,48 @@ export default function Home() {
 						<li className="p-4 pb-2 text-xs opacity-60 tracking-wide">
 							Most played songs this week
 						</li>
-						{tracks.map((track) => (
-							<li
-								key={track.id}
-								className="list-row cursor-pointer hover:bg-base-300 transition-all"
-								onClick={() => playTrack(track)}
-								onKeyUp={(e) => {
-									if (e.key === "Enter" || e.key === " ") {
-										playTrack(track);
-									}
-								}}
-							>
-								<div>
-									<img
-										className="w-16 h-16 rounded-lg object-cover"
-										src={track.thumbnailUrl || "/default-thumbnail.png"}
-										alt={track.title}
-									/>
-								</div>
-								<div>
-									<Link
-										href={`/tracks/${track.id}`}
-										className="hover:text-primary transition-colors"
-										onClick={(e) => e.stopPropagation()}
-									>
-										{track.title}
-									</Link>
-									<p className="text-sm opacity-70">
-										{Array.isArray(track.artists)
-											? track.artists.join(", ")
-											: track.artists}
-									</p>
-								</div>
-								<div className="list-col-grow flex justify-end">
-									<TrackDropdown
-										track={track}
-										onDelete={() => handleDelete(track.id)}
-									/>
-								</div>
-							</li>
-						))}
+						{!loading &&
+							!error &&
+							filteredTracks.map((track) => (
+								<li
+									key={track.id}
+									className="list-row cursor-pointer hover:bg-base-300 transition-all"
+									onClick={() => playTrack(track)}
+									onKeyUp={(e) => {
+										if (e.key === "Enter" || e.key === " ") {
+											playTrack(track);
+										}
+									}}
+								>
+									<div>
+										<img
+											className="w-16 h-16 rounded-lg object-cover"
+											src={track.thumbnailUrl || "/default-thumbnail.png"}
+											alt={track.title}
+										/>
+									</div>
+									<div>
+										<Link
+											href={`/tracks/${track.id}`}
+											className="hover:text-primary transition-colors"
+											onClick={(e) => e.stopPropagation()}
+										>
+											{track.title}
+										</Link>
+										<p className="text-sm opacity-70">
+											{Array.isArray(track.artists)
+												? track.artists.join(", ")
+												: track.artists}
+										</p>
+									</div>
+									<div className="list-col-grow flex justify-end">
+										<TrackDropdown
+											track={track}
+											onDelete={() => handleDelete(track.id)}
+										/>
+									</div>
+								</li>
+							))}
 					</ul>
 				</section>
 			</div>
