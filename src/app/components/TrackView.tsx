@@ -1,146 +1,159 @@
-'use client';
-// app/tracks/[id]/track-view.tsx
-import { usePlayerStore } from '@/app/lib/stores/usePlayerStore';
-import { formatTime } from '@/app/lib/util';
-import type { Track } from '@/app/lib/types';
-import { useEffect } from 'react';
-import Image from 'next/image';
+"use client";
+import { usePlayerStore } from "@/app/lib/stores/usePlayerStore";
+import { formatTime } from "@/app/lib/util";
+import type { Track } from "@/app/lib/types";
+import { useEffect } from "react";
+import Image from "next/image";
+import { Pause, Play, StepBack, StepForward } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-export function TrackView({ track }: { track: Track }) {
-    const {
-        currentTrack,
-        isPlaying,
-        progress,
-        duration,
-        play,
-        pause,
-        playTrack,
-        playNext,
-        playPrevious,
-        queue,
-        setQueue
-    } = usePlayerStore();
+export function TrackView({ track, tracks = [] }: { track: Track; tracks?: Track[] }) {
+	const router = useRouter();
+	const {
+		currentTrack,
+		isPlaying,
+		progress,
+		duration,
+		setVolume,
+		toggleMute,
+		isMuted,
+		volume,
+		play,
+		pause,
+		playTrack,
+		playNext,
+		playPrevious,
+		queue,
+		setQueue,
+		setProgress,
+	} = usePlayerStore();
 
-    // Set up the queue when the component mounts
-    useEffect(() => {
-        setQueue([track]);
-    }, [track, setQueue]);
+	// Set up the queue when the component mounts
+	useEffect(() => {
+		// If tracks are provided, use them for the queue
+		// Otherwise, fallback to just the current track
+		const queueTracks = tracks.length > 0 ? tracks : [track];
+		setQueue(queueTracks);
+	}, [track, tracks, setQueue]);
 
-    const isCurrentTrack = currentTrack?.id === track.id;
+	// Update URL when current track changes
+	useEffect(() => {
+		if (currentTrack && currentTrack.id !== track.id) {
+			router.push(`/tracks/${currentTrack.id}`);
+		}
+	}, [currentTrack, track.id, router]);
 
-    // Handle play/pause
-    const handlePlayPause = () => {
-        if (isCurrentTrack) {
-            isPlaying ? pause() : play();
-        } else {
-            playTrack(track);
-        }
-    };
-    
-    return (
-        <div className="max-w-4xl mx-auto p-6 space-y-8">
-            <div className="flex items-center gap-8">
-                {/* Track thumbnail */}
-                <Image
-                    src={track.thumbnailUrl || '/default-thumbnail.png'}
-                    alt={track.title}
-                    width={192}
-                    height={192}
-                    className="rounded-sm object-cover"
-                />
+	const isCurrentTrack = currentTrack?.id === track.id;
 
-                {/* Track info */}
-                <div className="space-y-4 flex-1">
-                    <h1 className="text-4xl font-bold">{track.title}</h1>
-                    <p className="text-xl text-neutral-400">
-                        {Array.isArray(track.artists)
-                            ? track.artists.join(', ')
-                            : track.artists}
-                    </p>
+	// Handle play/pause
+	const handlePlayPause = () => {
+		if (isCurrentTrack) {
+			isPlaying ? pause() : play();
+		} else {
+			playTrack(track);
+		}
+	};
 
-                    {/* Controls */}
-                    <div className="flex items-center gap-4">
-                        <button
-                            type="button"
-                            onClick={handlePlayPause}
-                            className="p-4 rounded-full bg-white text-black hover:scale-105 transition"
-                        >
-                            {isCurrentTrack && isPlaying ? (
-                                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                                    <title>Pause</title>
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 4h4v16H6zm8 0h4v16h-4z" />
-                                </svg>
-                            ) : (
-                                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                                    <title>Play</title>
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3l14 9-14 9V3z" />
-                                </svg>
-                            )}
-                        </button>
+	return (
+		<div className="max-w-4xl mx-auto p-6 space-y-8">
+			{/* Main Layout */}
+			<div className="flex flex-col items-center text-center space-y-6">
+				{/* CD Thumbnail */}
+				<div className="relative w-48 h-48 rounded-full overflow-hidden shadow-lg">
+					<Image
+						src={track.thumbnailUrl || "/default-thumbnail.png"}
+						alt={track.title}
+						fill
+						className="object-cover"
+					/>
+				</div>
 
-                        <button
-                            type="button"
-                            onClick={playPrevious}
-                            className="p-2 rounded-full hover:bg-neutral-800 transition"
-                        >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <title>Previous Track</title>
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </button>
+				{/* Track Info */}
+				<div className="space-y-2">
+					<h1 className="text-4xl font-bold tracking-tight">{track.title}</h1>
+					<p className="text-lg text-base-content">
+						{Array.isArray(track.artists)
+							? track.artists.join(", ")
+							: track.artists}
+					</p>
+				</div>
 
-                        <button
-                            type="button"
-                            onClick={playNext}
-                            className="p-2 rounded-full hover:bg-neutral-800 transition"
-                        >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <title>Next Track</title>
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                        </button>
-                    </div>
+				{/* Controls */}
+				<div className="flex items-center justify-center gap-6">
+					<button
+						type="button"
+						onClick={playPrevious}
+						className="p-2 rounded-full bg-base-100 text-base-content hover:bg-base-200 transition-colors"
+					>
+						<StepBack />
+					</button>
+					<button
+						type="button"
+						onClick={handlePlayPause}
+						className="p-4 rounded-full bg-base-100 text-base-content hover:bg-base-200 hover:scale-105 transition-transform"
+					>
+						{isCurrentTrack && isPlaying ? <Pause /> : <Play />}
+					</button>
+					<button
+						type="button"
+						onClick={playNext}
+						className="p-2 rounded-full bg-base-100 text-base-content hover:bg-base-200 transition-colors"
+					>
+						<StepForward />
+					</button>
+				</div>
 
-                    {/* Progress bar (only show if current track) */}
-                    {isCurrentTrack && (
-                        <div className="flex items-center gap-2 text-sm text-neutral-400">
-                            <span>{formatTime(progress)}</span>
-                            <div className="relative flex-1 h-1 group">
-                                <div className="absolute inset-0 h-1 bg-neutral-800 rounded-full">
-                                    <div
-                                        className="h-full bg-white rounded-full group-hover:bg-green-500 transition-colors"
-                                        style={{ width: `${(progress / duration) * 100}%` }}
-                                    />
-                                </div>
-                            </div>
-                            <span>{formatTime(duration)}</span>
-                        </div>
-                    )}
-                </div>
-            </div>
+				{/* Progress Bar */}
+				{isCurrentTrack && (
+					<div className="flex items-center gap-4 w-full max-w-md">
+						<span className="text-sm text-base-content">
+							{formatTime(progress)}
+						</span>
+						<div className="relative flex-1 h-1 group">
+							<input
+								type="range"
+								min={0}
+								max={duration}
+								value={progress}
+								onChange={(e) => setProgress(Number(e.target.value))}
+								className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+							/>
+							<div className="absolute inset-0 h-1 bg-base-300 rounded-full">
+								<div
+									className="h-full bg-base-content rounded-full transition-all"
+									style={{ width: `${(progress / duration) * 100}%` }}
+								/>
+							</div>
+						</div>
+						<span className="text-sm text-base-content">
+							{formatTime(duration)}
+						</span>
+					</div>
+				)}
+			</div>
 
-            {/* Additional track details */}
-            <div className="space-y-4">
-                <h2 className="text-xl font-semibold">About this track</h2>
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <h3 className="text-sm text-neutral-400">Tags</h3>
-                        <p className="mt-1">
-                            {Array.isArray(track.tags)
-                                ? track.tags.join(', ')
-                                : track.tags || 'No tags'}
-                        </p>
-                    </div>
-                    {track.fileSize && (
-                        <div>
-                            <h3 className="text-sm text-neutral-400">File Size</h3>
-                            <p className="mt-1">
-                                {(track.fileSize / 1024 / 1024).toFixed(2)} MB
-                            </p>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
+			{/* Additional Details */}
+			<div className="space-y-4 text-left">
+				<h2 className="text-lg font-semibold">About this track</h2>
+				<div className="flex items-center gap-4 justify-between">
+					<div>
+						<h3 className="text-sm text-base-content">Tags</h3>
+						<p className="mt-1 badge badge-ghost border border-accent/25">
+							{Array.isArray(track.tags)
+								? track.tags.join(", ")
+								: track.tags || "No tags"}
+						</p>
+					</div>
+					{track.fileSize && (
+						<div>
+							<h3 className="text-sm text-base-content">File Size</h3>
+							<p className="mt-1">
+								{(track.fileSize / 1024 / 1024).toFixed(2)} MB
+							</p>
+						</div>
+					)}
+				</div>
+			</div>
+		</div>
+	);
 }

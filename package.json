@@ -13,6 +13,7 @@
 		"@types/howler": "^2.2.12",
 		"@types/sharp": "^0.31.1",
 		"howler": "^2.2.4",
+		"lucide-react": "^0.473.0",
 		"music-metadata": "10.7.0",
 		"next": "^15.1.6",
 		"out": "file:",
