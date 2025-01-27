@@ -4,7 +4,7 @@
 
 ### Search
 
-- [ ] Add search functionality
+- [ checked ] Add search functionality
 
 ### Filter
 
@@ -39,7 +39,10 @@
 
 ### Performance
 
-- [ ] Improve load times
+- [checked ] Improve load times
 - [ ] Update UI
 - [ ] Reduce redundancy in calling APIs
 - [ ] Improve caching
+
+## Bugs
+- [] deleting track causes side effects in queue. 
