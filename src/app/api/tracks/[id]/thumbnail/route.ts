@@ -22,13 +22,15 @@ export async function GET(
             return NextResponse.redirect(new URL('/default-thumbnail.png', request.url));
         }
 
-        // Return the thumbnail with the correct content type
-        return new NextResponse(track.thumbnail, {
+        const response = new NextResponse(track.thumbnail, {
             headers: {
                 'Content-Type': track.thumbnailType || 'image/jpeg',
                 'Cache-Control': 'public, max-age=31536000, immutable',
+                'Content-Length': track.thumbnail.length.toString(),
             },
         });
+
+        return response;
     } catch (error) {
         console.error('Error fetching thumbnail:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -26,7 +26,7 @@ export function TrackDropdown({ track, onDelete }: TrackDropdownProps) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                 </svg>
             </summary>
-            <ul className="dropdown-content menu bg-neutral-900 rounded-box z-[1] w-52 p-2 shadow">
+            <ul className="dropdown-content menu bg-neutral-900 rounded-box z-1 w-52 p-2 shadow-sm">
                 <li>
                     <button type="button" onClick={() => {
                         const dialog = document.getElementById(`track-${track.id}`);

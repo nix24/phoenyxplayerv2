@@ -7,4 +7,5 @@ export interface Track {
     tags: string | string[];
     fileSize?: number | null;
     thumbnailUrl?: string | null;
+
 }

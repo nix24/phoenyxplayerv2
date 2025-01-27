@@ -9,6 +9,9 @@ interface PlayerState {
     duration: number;
     progress: number;
     queue: Track[];
+    volume: number;
+    isMuted: boolean;
+    previousVolume: number;
 
     initializePlayer: (track: Track) => void;
     play: () => void;
@@ -19,6 +22,8 @@ interface PlayerState {
     playNext: () => void;
     playPrevious: () => void;
     setQueue: (tracks: Track[]) => void;
+    setVolume: (volume: number) => void;
+    toggleMute: () => void;
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
@@ -28,6 +33,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     duration: 0,
     progress: 0,
     queue: [],
+    volume: 100,
+    isMuted: false,
+    previousVolume: 100,
 
     setQueue: (tracks) => {
         set({ queue: tracks });
@@ -66,6 +74,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
         const howl = new Howl({
             src: [track.url || ''],
             html5: true,
+            volume: state.isMuted ? 0 : state.volume / 100,
             onload: () => set({ duration: howl.duration() }),
             onplay: () => {
                 set({ isPlaying: true });
@@ -77,7 +86,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
                     }
                 }, 1000);
             },
-            onpause: () => set({ isPlaying: false }),
+            onpause: () => {
+                const currentProgress = howl.seek();
+                set({ isPlaying: false, progress: currentProgress });
+            },
             onstop: () => set({ isPlaying: false, progress: 0 }),
             onend: () => {
                 set({ isPlaying: false, progress: 0 });
@@ -110,10 +122,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     },
 
     setProgress: (time) => {
-        const { howl } = get();
+        const { howl, isPlaying } = get();
         if (howl) {
             howl.seek(time);
             set({ progress: time });
+            if (isPlaying) {
+                howl.play();
+            }
         }
     },
 
@@ -126,5 +141,27 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
             progress: 0,
             duration: 0,
         });
+    },
+
+    setVolume: (volume: number) => {
+        const { howl, isMuted } = get();
+        if (howl && !isMuted) {
+            howl.volume(volume / 100);
+        }
+        set({ volume, previousVolume: volume });
+    },
+
+    toggleMute: () => {
+        const { howl, isMuted, volume, previousVolume } = get();
+        if (howl) {
+            if (isMuted) {
+                // Unmute: restore previous volume
+                howl.volume(previousVolume / 100);
+            } else {
+                // Mute: set volume to 0 but remember previous volume
+                howl.volume(0);
+            }
+        }
+        set({ isMuted: !isMuted });
     },
 }));
