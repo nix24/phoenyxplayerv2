@@ -1,6 +1,7 @@
 import { TrackView } from "@/app/components/TrackView";
 import { prisma } from "@/app/lib/prisma";
 import { notFound } from "next/navigation";
+import type { Track } from "@/app/lib/types";
 
 export default async function TrackPage({
 	params,
@@ -14,7 +15,6 @@ export default async function TrackPage({
 			artists: true,
 			tags: true,
 			fileSize: true,
-			url: true,
 		},
 	});
 
@@ -30,26 +30,27 @@ export default async function TrackPage({
 			artists: true,
 			tags: true,
 			fileSize: true,
-			url: true,
 		},
 	});
 
 	// Format all tracks
-	const formattedTracks = allTracks.map(t => ({
+	const formattedTracks: Track[] = allTracks.map(t => ({
 		...t,
 		url: `/api/tracks/${t.id}/audio`,
 		thumbnailUrl: `/api/tracks/${t.id}/thumbnail`,
-		artists: JSON.parse(t.artists),
-		tags: JSON.parse(t.tags),
+		artists: Array.isArray(t.artists) ? t.artists : JSON.parse(t.artists),
+		tags: Array.isArray(t.tags) ? t.tags : JSON.parse(t.tags),
+		fileSize: t.fileSize,
 	}));
 
 	// Format the current track
-	const formattedTrack = {
+	const formattedTrack: Track = {
 		...track,
 		url: `/api/tracks/${track.id}/audio`,
 		thumbnailUrl: `/api/tracks/${track.id}/thumbnail`,
-		artists: JSON.parse(track.artists),
-		tags: JSON.parse(track.tags),
+		artists: Array.isArray(track.artists) ? track.artists : JSON.parse(track.artists),
+		tags: Array.isArray(track.tags) ? track.tags : JSON.parse(track.tags),
+		fileSize: track.fileSize,
 	};
 
 	return <TrackView track={formattedTrack} tracks={formattedTracks} />;

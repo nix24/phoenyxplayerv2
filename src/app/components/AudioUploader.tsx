@@ -50,25 +50,28 @@ export function AudioUploader({ onUploadComplete }: AudioUploaderProps) {
 					htmlFor="audio-upload"
 					className="btn btn-outline btn-accent gap-2 file-input w-full max-w-xs rounded-full"
 				>
-					<Upload className="w-5 h-5" />
-					Upload Audio
+					{isLoading ? (
+						<>
+							<span className="loading loading-spinner loading-sm" />
+							Uploading...
+						</>
+					) : (
+						<>
+							<Upload className="w-5 h-5" />
+							Upload Audio
+						</>
+					)}
 				</label>
 				<input
 					type="file"
 					id="audio-upload"
 					name="audio"
-					className="hidden" // Hiding the raw input for styling
+					className="hidden"
 					accept="audio/mpeg"
 					onChange={handleFileChange}
+					disabled={isLoading}
 				/>
 			</div>
-
-			{isLoading && (
-				<div className="flex items-center space-x-2">
-					<span className="loading loading-spinner loading-lg text-accent" />
-					<p className="text-sm text-accent">Uploading...</p>
-				</div>
-			)}
 
 			{/* Error Message */}
 			{error && <div className="text-sm text-error">Error: {error}</div>}

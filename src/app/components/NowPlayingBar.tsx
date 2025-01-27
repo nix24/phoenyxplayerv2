@@ -3,6 +3,15 @@
 import { usePlayerStore } from "@/app/lib/stores/usePlayerStore";
 import { formatTime } from "@/app/lib/util";
 import Image from "next/image";
+import {
+	Play,
+	Pause,
+	SkipBack,
+	SkipForward,
+	Volume2,
+	VolumeX,
+} from "lucide-react";
+import { useEffect, useRef } from "react";
 
 export function NowPlayingBar() {
 	const {
@@ -12,181 +21,167 @@ export function NowPlayingBar() {
 		duration,
 		volume,
 		isMuted,
+		queue,
 		play,
 		pause,
 		playPrevious,
 		playNext,
 		setProgress,
 		setVolume,
-		toggleMute
+		toggleMute,
 	} = usePlayerStore();
+
+	const progressBarRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		const updateProgress = () => {
+			if (isPlaying) {
+				requestAnimationFrame(updateProgress);
+			}
+		};
+
+		if (isPlaying) {
+			requestAnimationFrame(updateProgress);
+		}
+
+		return () => {
+			cancelAnimationFrame(0);
+		};
+	}, [isPlaying]);
+
+	const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+		if (!progressBarRef.current) return;
+
+		const rect = progressBarRef.current.getBoundingClientRect();
+		const pos = (e.clientX - rect.left) / rect.width;
+		setProgress(pos * duration);
+	};
 
 	if (!currentTrack) return null;
 
+	const hasQueue = queue.length > 0;
+	const canPlayPrevious = hasQueue;
+	const canPlayNext = hasQueue;
+
 	return (
-		<div className="fixed bottom-0 left-0 right-0 h-24 bg-base-300 rounded-t-lg">
+		<div className="fixed bottom-0 left-0 right-0 h-24 bg-base-300 rounded-t-lg shadow-lg border-t border-base-content/10">
 			<div className="flex items-center justify-between h-full px-4">
 				{/* Track Info */}
 				<div className="flex items-center gap-4 w-1/3">
-					<Image
-						src={currentTrack.thumbnailUrl || "/default-thumbnail.png"}
-						alt={currentTrack.title}
-						width={48}
-						height={48}
-						className="w-12 h-12 rounded-sm"
-					/>
+					<div className="relative w-12 h-12">
+						<Image
+							src={currentTrack.thumbnailUrl || "/default-thumbnail.png"}
+							alt={currentTrack.title}
+							fill
+							className="rounded-sm object-cover"
+						/>
+					</div>
 					<div className="w-40">
 						<h3 className="text-sm text-base-content font-medium truncate">
 							{currentTrack.title}
 						</h3>
 						<p className="text-xs text-base-content/70 truncate">
-							{currentTrack.artists}
+							{Array.isArray(currentTrack.artists)
+								? currentTrack.artists.join(", ")
+								: currentTrack.artists}
 						</p>
 					</div>
 				</div>
 
 				{/* Player Controls */}
-				<div className="flex flex-col items-center w-1/3">
+				<div className="flex flex-col items-center w-1/3 gap-2">
 					<div className="flex items-center gap-4">
 						<button
 							type="button"
 							onClick={playPrevious}
-							className="text-base-content hover:text-accent transition"
+							className={`btn btn-sm btn-circle ${
+								!canPlayPrevious ? "btn-disabled" : ""
+							}`}
+							disabled={!canPlayPrevious}
 						>
-							<svg
-								className="w-5 h-5"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<title>Previous Track</title>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M15 19l-7-7 7-7"
-								/>
-							</svg>
+							<SkipBack className="w-4 h-4" />
 						</button>
 
 						<button
 							type="button"
 							onClick={isPlaying ? pause : play}
-							className="p-2 rounded-full bg-base-content text-base-300 hover:scale-105 transition"
+							className="btn btn-circle btn-primary"
 						>
 							{isPlaying ? (
-								<svg
-									className="w-6 h-6"
-									fill="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<title>Pause</title>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M6 4h4v16H6zm8 0h4v16h-4z"
-									/>
-								</svg>
+								<Pause className="w-6 h-6" />
 							) : (
-								<svg
-									className="w-6 h-6"
-									fill="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<title>Play</title>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M5 3l14 9-14 9V3z"
-									/>
-								</svg>
+								<Play className="w-6 h-6" />
 							)}
 						</button>
 
 						<button
 							type="button"
 							onClick={playNext}
-							className="text-base-content hover:text-accent transition"
+							className={`btn btn-sm btn-circle ${
+								!canPlayNext ? "btn-disabled" : ""
+							}`}
+							disabled={!canPlayNext}
 						>
-							<svg
-								className="w-5 h-5"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<title>Next Track</title>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M9 5l7 7-7 7"
-								/>
-							</svg>
+							<SkipForward className="w-4 h-4" />
 						</button>
 					</div>
 
 					{/* Progress Bar */}
-					<div className="w-full mt-2 flex items-center gap-2 text-xs text-base-content">
-						<span>{formatTime(progress)}</span>
-						<div className="relative flex-1 h-1 group">
-							<input
-								type="range"
-								min={0}
-								max={duration}
-								value={progress}
-								onChange={(e) => setProgress(Number.parseFloat(e.target.value))}
-								className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+					<div className="w-full flex items-center gap-2 px-4">
+						<span className="text-xs text-base-content/70">
+							{formatTime(progress)}
+						</span>
+						<div
+							ref={progressBarRef}
+							className="flex-1 h-1 bg-base-content/20 rounded-full cursor-pointer"
+							onClick={handleProgressClick}
+							onKeyDown={(e) => {
+								if (e.key === "Enter" || e.key === " ") {
+									handleProgressClick(
+										e as unknown as React.MouseEvent<HTMLDivElement>,
+									);
+								}
+							}}
+							tabIndex={0}
+							role="slider"
+							aria-label="Track progress"
+							aria-valuemin={0}
+							aria-valuemax={duration}
+							aria-valuenow={progress}
+						>
+							<div
+								className="h-full bg-primary rounded-full"
+								style={{ width: `${(progress / duration) * 100}%` }}
 							/>
-							<div className="absolute inset-0 h-1 bg-base-100 rounded-full">
-								<div
-									className="h-full bg-primary rounded-full group-hover:bg-secondary transition-colors"
-									style={{ width: `${(progress / duration) * 100}%` }}
-								/>
-							</div>
 						</div>
-						<span>{formatTime(duration)}</span>
+						<span className="text-xs text-base-content/70">
+							{formatTime(duration)}
+						</span>
 					</div>
 				</div>
 
 				{/* Volume Control */}
-				<div className="w-1/3 flex justify-end items-center space-x-4">
+				<div className="flex items-center gap-2 w-1/3 justify-end">
 					<button
-						className="btn btn-ghost btn-sm"
 						type="button"
 						onClick={toggleMute}
+						className="btn btn-ghost btn-sm btn-circle"
 					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							className="h-5 w-5"
-							viewBox="0 0 20 20"
-							fill="currentColor"
-						>
-							<title>{isMuted ? 'Unmute' : 'Mute'}</title>
-							{isMuted ? (
-								<path
-									fillRule="evenodd"
-									d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM12.293 7.293a1 1 0 011.414 0L15 8.586l1.293-1.293a1 1 0 111.414 1.414L16.414 10l1.293 1.293a1 1 0 01-1.414 1.414L15 11.414l-1.293 1.293a1 1 0 01-1.414-1.414L13.586 10l-1.293-1.293a1 1 0 010-1.414z"
-									clipRule="evenodd"
-								/>
-							) : (
-								<path
-									fillRule="evenodd"
-									d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z"
-									clipRule="evenodd"
-								/>
-							)}
-						</svg>
+						{isMuted ? (
+							<VolumeX className="w-4 h-4" />
+						) : (
+							<Volume2 className="w-4 h-4" />
+						)}
 					</button>
 					<input
 						type="range"
 						min="0"
 						max="100"
 						value={isMuted ? 0 : volume}
-						className="range range-xs range-primary"
 						onChange={(e) => setVolume(Number(e.target.value))}
+						className="range range-xs cursor-pointer range-primary"
 					/>
+					<span className="text-sm">{isMuted ? "Muted" : `${volume}%`}</span>
 				</div>
 			</div>
 		</div>
