@@ -1,4 +1,5 @@
 import { Menu } from "lucide-react";
+import Link from "next/link";
 
 export function Navbar() {
 	return (
@@ -54,26 +55,26 @@ export function Navbar() {
 				<ul className="menu p-4 w-80 min-h-full bg-base-200 text-base-content">
 					{/* Drawer Links */}
 					<li>
-						<a href="/">Home</a>
+						<Link href="/">Home</Link>
 					</li>
 					<li>
-						<a href="/playlists">Playlists</a>
+						<Link href="/playlists">Playlists</Link>
 					</li>
 					<li>
 						<details>
 							<summary>Conversion</summary>
 							<ul>
 								<li>
-									<a href="/conversion/mp3">MP3 Conversion</a>
+									<Link href="/conversion/mp3">MP3 Conversion</Link>
 								</li>
 								<li>
-									<a href="/conversion/compression">MP3 Compression</a>
+									<Link href="/conversion/compression">MP3 Compression</Link>
 								</li>
 							</ul>
 						</details>
 					</li>
 					<li>
-						<a href="/about">About</a>
+						<Link href="/about">About</Link>
 					</li>
 				</ul>
 			</div>

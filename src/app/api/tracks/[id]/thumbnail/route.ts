@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
+import Placeholder from "@/app/images/placeholder.png";
 
 export async function GET(
     request: NextRequest,
@@ -7,7 +8,7 @@ export async function GET(
 ) {
     try {
         // Properly destructure id from context
-        const { id } = context.params;
+        const { id } = await context.params;
 
         const track = await prisma.track.findUnique({
             where: { id },
@@ -19,9 +20,9 @@ export async function GET(
 
         if (!track?.thumbnail) {
             // Redirect to default thumbnail if none exists
-            return NextResponse.redirect(new URL('/default-thumbnail.png', request.url));
+            const placeholderUrl = new URL(Placeholder.src, request.url).toString();
+            return NextResponse.redirect(placeholderUrl);
         }
-
         const response = new NextResponse(track.thumbnail, {
             headers: {
                 'Content-Type': track.thumbnailType || 'image/jpeg',

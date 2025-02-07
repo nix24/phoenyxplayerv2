@@ -1,16 +1,20 @@
-// types.ts
-export interface Track {
-  id: string;
-  url?: string;
-  title: string;
-  artists: string[];
-  tags: string[];
-  fileSize: number | null;
-  thumbnailUrl?: string;
+import type { Track as PrismaTrack, Playlist as PrismaPlaylist, PlaylistTrack as PrismaPlaylistTrack } from '@prisma/client'
+
+// Base track type with parsed fields and required URLs
+export interface Track extends Omit<PrismaTrack, 'artists' | 'tags' | 'data' | 'thumbnail' | 'thumbnailType'> {
+    artists: string[]
+    tags: string[]
+    url: string
+    thumbnailUrl?: string
+    bpm?: number
 }
 
-export interface TracksResponse {
-  tracks: Track[];
-  totalPages: number;
-  currentPage: number;
+// Playlist track with properly typed track
+export interface PlaylistTrack extends Omit<PrismaPlaylistTrack, 'track'> {
+    track: Track
+}
+
+// Full playlist with typed tracks
+export interface Playlist extends Omit<PrismaPlaylist, 'tracks'> {
+    tracks: PlaylistTrack[]
 }

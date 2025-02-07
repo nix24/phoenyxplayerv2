@@ -11,13 +11,38 @@ datasource db {
 }
 
 model Track {
-  id       String   @id
-  url      String?
-  title    String
-  artists  String   // Stored as JSON array string
-  tags     String   // Stored as JSON array string
-  fileSize Int?
-  data     Bytes    // mp3 file
-  thumbnail Bytes?  // image file
-  thumbnailType String? //mime type
+  id           String          @id
+  url          String?
+  title        String
+  artists      String          // Stored as JSON array string
+  tags         String          // Stored as JSON array string
+  fileSize     Int?
+  data         Bytes          // mp3 file
+  thumbnail    Bytes?         // image file
+  thumbnailType String?       //mime type
+  playlistTracks PlaylistTrack[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model Playlist {
+  id          String          @id @default(cuid())
+  name        String
+  description String?
+  tracks      PlaylistTrack[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model PlaylistTrack {
+  id         String    @id @default(cuid())
+  playlist   Playlist  @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  playlistId String
+  track      Track     @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  trackId    String
+  order      Int
+  addedAt    DateTime  @default(now())
+
+  @@unique([playlistId, trackId])
+  @@index([playlistId, order])
 }

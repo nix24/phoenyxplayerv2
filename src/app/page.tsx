@@ -11,6 +11,7 @@ import type { Track } from "@/app/lib/types";
 import { useTracks } from "./hooks/useTracks";
 import { useInView } from "react-intersection-observer";
 import { useQueryClient } from "@tanstack/react-query";
+import Placeholder from "@/app/images/placeholder.png";
 
 export default function Home() {
 	const { playTrack } = usePlayerStore();
@@ -107,7 +108,7 @@ export default function Home() {
 								<div>
 									<img
 										className="w-16 h-16 rounded-lg object-cover"
-										src={track.thumbnailUrl || "/default-thumbnail.png"}
+										src={track.thumbnailUrl || Placeholder.src}
 										alt={track.title}
 									/>
 								</div>
