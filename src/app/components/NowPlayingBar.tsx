@@ -3,6 +3,7 @@
 import { usePlayerStore } from "@/app/lib/stores/usePlayerStore";
 import { formatTime } from "@/app/lib/util";
 import Image from "next/image";
+import Placeholder from "@/app/images/placeholder.png";
 import {
 	Play,
 	Pause,
@@ -69,11 +70,10 @@ export function NowPlayingBar() {
 				{/* Track Info */}
 				<div className="flex items-center gap-4 w-1/3">
 					<div className="relative w-12 h-12">
-						<Image
-							src={currentTrack.thumbnailUrl || "/default-thumbnail.png"}
+						<img
+							src={currentTrack.thumbnailUrl || Placeholder.src}
 							alt={currentTrack.title}
-							fill
-							className="rounded-sm object-cover"
+							className="rounded-sm object-cover w-full h-full"
 						/>
 					</div>
 					<div className="w-40">

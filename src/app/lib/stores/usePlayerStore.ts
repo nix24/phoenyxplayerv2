@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Howl } from 'howler';
 import type { Track } from '@/app/lib/types';
+import { detectBPM } from '@/app/lib/utils/bpmDetector';
 
 interface PlayerState {
     currentTrack: Track | null;
@@ -13,6 +14,9 @@ interface PlayerState {
     isMuted: boolean;
     previousVolume: number;
     currentIndex: number;
+    bpm: number;
+    pulseTimestamp: number;
+    beatIntervalId: number | null;
 
     initializePlayer: (track: Track, tracks?: Track[]) => void;
     play: () => void;
@@ -25,6 +29,9 @@ interface PlayerState {
     setQueue: (tracks: Track[]) => void;
     setVolume: (volume: number) => void;
     toggleMute: () => void;
+    triggerPulse: () => void;
+    startBeatPulse: () => void;
+    stopBeatPulse: () => void;
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
@@ -38,6 +45,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     isMuted: false,
     previousVolume: 100,
     currentIndex: -1,
+    bpm: 120,
+    pulseTimestamp: 0,
+    beatIntervalId: null,
 
     setQueue: (tracks) => {
         set({ queue: tracks });
@@ -78,11 +88,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     },
 
     initializePlayer: (track, tracks) => {
-        const { howl: currentHowl } = get();
-        if (currentHowl) {
-            currentHowl.stop();
-            currentHowl.unload();
-        }
+        // Clean up any existing player
+        get().cleanup();
 
         if (tracks) {
             set({ queue: tracks });
@@ -95,31 +102,46 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
         const howl = new Howl({
             src: [track.url],
             html5: true,
-            onload: () => {
-                set(state => ({
+            onload: async () => {
+                // Detect BPM if not already set
+                if (!track.bpm && track.url) {
+                    try {
+                        const detectedBpm = await detectBPM(track.url);
+                        track.bpm = detectedBpm;
+                    } catch (error) {
+                        console.error('Failed to detect BPM:', error);
+                    }
+                }
+
+                set({
                     duration: howl.duration(),
-                    currentTrack: track,
-                    currentIndex: state.queue.findIndex(t => t.id === track.id)
-                }));
-            },
-            onend: () => {
-                get().playNext();
+                    bpm: track.bpm || 120,
+                });
             },
             onplay: () => {
                 set({ isPlaying: true });
-                const updateProgress = () => {
-                    if (get().isPlaying) {
-                        set({ progress: howl.seek() });
-                        requestAnimationFrame(updateProgress);
-                    }
-                };
-                updateProgress();
+                get().startBeatPulse();
             },
-            onpause: () => set({ isPlaying: false }),
-            onstop: () => set({ isPlaying: false, progress: 0 }),
+            onpause: () => {
+                set({ isPlaying: false });
+                get().stopBeatPulse();
+            },
+            onstop: () => {
+                set({ isPlaying: false });
+                get().stopBeatPulse();
+            },
+            onend: () => {
+                get().stopBeatPulse();
+                get().playNext();
+            },
         });
 
-        set({ howl });
+        set({
+            currentTrack: track,
+            howl,
+            progress: 0,
+        });
+
         howl.play();
     },
 
@@ -127,6 +149,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
         const { howl } = get();
         if (howl) {
             howl.play();
+            set({ isPlaying: true });
+            get().startBeatPulse();
         }
     },
 
@@ -134,6 +158,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
         const { howl } = get();
         if (howl) {
             howl.pause();
+            set({ isPlaying: false });
+            get().stopBeatPulse();
         }
     },
 
@@ -155,10 +181,11 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
             howl.stop();
             howl.unload();
         }
+        get().stopBeatPulse();
         set({
             currentTrack: null,
-            isPlaying: false,
             howl: null,
+            isPlaying: false,
             duration: 0,
             progress: 0,
         });
@@ -183,6 +210,25 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
                 howl.volume(0);
                 set({ isMuted: true });
             }
+        }
+    },
+
+    triggerPulse: () => set({ pulseTimestamp: Date.now() }),
+
+    startBeatPulse: () => {
+        const { bpm } = get();
+        const interval = 60000 / bpm;
+        const id = setInterval(() => {
+            set({ pulseTimestamp: Date.now() });
+        }, interval);
+        set({ beatIntervalId: id as unknown as number });
+    },
+
+    stopBeatPulse: () => {
+        const { beatIntervalId } = get();
+        if (beatIntervalId) {
+            clearInterval(beatIntervalId);
+            set({ beatIntervalId: null });
         }
     },
 }));

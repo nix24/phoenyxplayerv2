@@ -14,9 +14,24 @@ const TrackSchema = z.object({
     tags: z.array(z.string()),
     fileSize: z.number().optional(),
     data: z.instanceof(Buffer),
+    bpm: z.number().optional(),
+})
+
+const PlaylistSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    description: z.string().optional(),
+    tracks: z.array(z.object({
+        id: z.string(),
+        trackId: z.string(),
+        playlistId: z.string(),
+        order: z.number(),
+        addedAt: z.date(),
+    })),
 })
 
 export type Track = z.infer<typeof TrackSchema>
+export type Playlist = z.infer<typeof PlaylistSchema>
 
 export class PlayerDB {
     async addTrack(track: Track) {
@@ -65,12 +80,12 @@ export class PlayerDB {
 export const playerDB = new PlayerDB()
 
 // Initialize database - this runs the Prisma migrations
-export async function initializeDatabase() {
+async function initializeDatabase() {
     try {
         await prisma.$connect()
-        console.log('Database initialized successfully')
     } catch (error) {
-        console.error('Failed to initialize database:', error)
-        throw error
+        console.error('Failed to connect to database:', error)
     }
 }
+
+initializeDatabase()
