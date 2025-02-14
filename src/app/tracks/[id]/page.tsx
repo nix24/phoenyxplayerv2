@@ -5,10 +5,10 @@ import type { Track } from "@/app/lib/types";
 
 export default async function TrackPage({
     params,
-}: { params: { id: string } }) {
+}: Readonly<{ params: { id: string } }>) {
     // Fetch the current track
     const track = await prisma.track.findUnique({
-        where: { id: (await params).id },
+        where: { id: params.id },
         select: {
             id: true,
             title: true,
