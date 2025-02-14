@@ -15,7 +15,7 @@ export async function GET(
     request: NextRequest,
     context: { params: { playlistId: string } }
 ) {
-    const { playlistId } = await context.params;
+    const { playlistId } = context.params;
 
     try {
         const playlist = await prisma.playlist.findUnique({
