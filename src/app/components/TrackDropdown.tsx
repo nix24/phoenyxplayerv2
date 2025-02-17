@@ -1,78 +1,344 @@
+import { createPortal } from "react-dom";
 import type { Track } from "../lib/types";
+import { Info, TagIcon, TrashIcon, MoreVertical } from "lucide-react";
+
 interface TrackDropdownProps {
-    track: Track;
-    onDelete: () => void;
-}
-export function TrackDropdown({ track, onDelete }: TrackDropdownProps) {
-    const artists = typeof track.artists === 'string'
-        ? track.artists
-        : Array.isArray(track.artists)
-            ? track.artists.join(', ')
-            : 'Unknown Artist';
-
-    const tags = typeof track.tags === 'string'
-        ? JSON.parse(track.tags).join(', ')
-        : Array.isArray(track.tags)
-            ? track.tags.join(', ')
-            : 'No tags';
-    return (
-        <details className="dropdown dropdown-bottom dropdown-end"
-            onClick={e => e.stopPropagation()}
-            onKeyDown={e => e.stopPropagation()}
-        >
-            <summary className="btn btn-ghost btn-sm">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <title>Options</title>
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                </svg>
-            </summary>
-            <ul className="dropdown-content menu bg-neutral-900 rounded-box z-1 w-52 p-2 shadow-sm">
-                <li>
-                    <button type="button" onClick={() => {
-                        const dialog = document.getElementById(`track-${track.id}`);
-                        if (dialog) (dialog as HTMLDialogElement).showModal();
-                    }}>
-                        Details
-                    </button>
-                </li>
-                <li>
-                    <button type="button" onClick={() => {
-                        const dialog = document.getElementById(`edit-${track.id}`);
-                        if (dialog) (dialog as HTMLDialogElement).showModal();
-                    }}>Edit Tags</button></li>
-                <li><button type="button" onClick={onDelete} className="text-red-400">Delete</button></li>
-            </ul>
-
-            {/* Details Modal */}
-            <dialog id={`track-${track.id}`} className="modal">
-                <div className="modal-box bg-neutral-900">
-                    <h3 className="font-bold text-lg mb-4">{track.title}</h3>
-                    <div className="space-y-2">
-                        <p>Artists: {artists}</p>
-                        <p>Tags: {tags}</p>
-                        <p>File Size: {track.fileSize ? `${(track.fileSize / 1024 / 1024).toFixed(2)} MB` : 'Unknown'}</p>
-                    </div>
-                    <div className="modal-action">
-                        <form method="dialog">
-                            <button className="btn" type="button" onClick={() => (document.getElementById(`track-${track.id}`) as HTMLDialogElement).close()}>close</button>
-                        </form>
-                    </div>
-                </div>
-            </dialog>
-
-            {/* Edit Tags Modal */}
-            <dialog id={`edit-${track.id}`} className="modal">
-                <div className="modal-box bg-neutral-900">
-                    <h3 className="font-bold text-lg mb-4">Edit Tags</h3>
-                    <p className="py-4">Tag editing coming soon...</p>
-                    <div className="modal-action">
-                        <form method="dialog">
-                            <button className="btn" type="button" onClick={() => (document.getElementById(`edit-${track.id}`) as HTMLDialogElement).close()}>close</button>
-                        </form>
-                    </div>
-                </div>
-
-            </dialog>
-        </details>)
+	track: Track;
+	onDelete: () => void;
 }
 
+export function TrackDropdown({
+	track,
+	onDelete,
+}: Readonly<TrackDropdownProps>) {
+	const getArtistsString = (artists: string | string[] | undefined): string => {
+		if (typeof artists === "string") return artists;
+		if (Array.isArray(artists)) return artists.join(", ");
+		return "Unknown Artist";
+	};
+
+	const getTagsString = (tags: string | string[] | undefined): string => {
+		if (typeof tags === "string") return JSON.parse(tags).join(", ");
+		if (Array.isArray(tags)) return tags.join(", ");
+		return "No tags";
+	};
+
+	const artists = getArtistsString(track.artists);
+	const tags = getTagsString(track.tags);
+
+	return (
+		<>
+			<button
+				type="button"
+				className="btn btn-ghost btn-sm"
+				onClick={(e) => {
+					e.stopPropagation();
+					const dialog = document.getElementById(`options-${track.id}`);
+					if (dialog) (dialog as HTMLDialogElement).showModal();
+				}}
+			>
+				<MoreVertical className="w-5 h-5" />
+			</button>
+
+			{createPortal(
+				<dialog
+					id={`options-${track.id}`}
+					className="modal modal-bottom sm:modal-middle"
+					onClick={(e) => {
+						if (e.target === e.currentTarget) {
+							e.stopPropagation();
+							(e.target as HTMLDialogElement).close();
+						}
+					}}
+					onKeyUp={(e) => {
+						e.stopPropagation();
+						if (e.key === "Escape") {
+							(e.target as HTMLDialogElement).close();
+						}
+					}}
+				>
+					<div
+						className="modal-box bg-base-300/95 backdrop-blur-xl border border-primary/20 z-50"
+						// biome-ignore lint/a11y/useSemanticElements: <explanation>
+						role="dialog"
+						tabIndex={-1}
+						onClick={(e) => e.stopPropagation()}
+						onKeyUp={(e) => {
+							if (e.key === "Escape") {
+								(e.target as HTMLDialogElement).close();
+							}
+						}}
+					>
+						<div className="space-y-2">
+							<button
+								type="button"
+								onClick={() => {
+									(
+										document.getElementById(
+											`options-${track.id}`,
+										) as HTMLDialogElement
+									).close();
+									const dialog = document.getElementById(`track-${track.id}`);
+									if (dialog) (dialog as HTMLDialogElement).showModal();
+								}}
+								className="w-full flex items-center gap-3 px-4 py-3 hover:bg-primary/10 
+								rounded-lg transition-all duration-300 hover:translate-x-1"
+							>
+								<span
+									className="w-8 h-8 rounded-full bg-primary/20 flex items-center 
+								justify-center group-hover:scale-110 transition-transform"
+								>
+									<Info className="w-5 h-5" />
+								</span>
+								Details
+							</button>
+
+							<button
+								type="button"
+								onClick={() => {
+									(
+										document.getElementById(
+											`options-${track.id}`,
+										) as HTMLDialogElement
+									).close();
+									const dialog = document.getElementById(`edit-${track.id}`);
+									if (dialog) (dialog as HTMLDialogElement).showModal();
+								}}
+								className="w-full flex items-center gap-3 px-4 py-3 hover:bg-primary/10 
+								rounded-lg transition-all duration-300 hover:translate-x-1"
+							>
+								<span
+									className="w-8 h-8 rounded-full bg-primary/20 flex items-center 
+								justify-center group-hover:scale-110 transition-transform"
+								>
+									<TagIcon className="w-5 h-5" />
+								</span>
+								Edit Tags
+							</button>
+
+							<button
+								type="button"
+								onClick={() => {
+									(
+										document.getElementById(
+											`options-${track.id}`,
+										) as HTMLDialogElement
+									).close();
+									onDelete();
+								}}
+								className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-500/10 
+								rounded-lg transition-all duration-300 hover:translate-x-1 text-red-400"
+							>
+								<span
+									className="w-8 h-8 rounded-full bg-red-500/20 flex items-center 
+								justify-center group-hover:scale-110 transition-transform"
+								>
+									<TrashIcon className="w-5 h-5" />
+								</span>
+								Delete
+							</button>
+						</div>
+						<div className="modal-action">
+							<form method="dialog">
+								<button
+									type="button"
+									className="btn btn-primary btn-outline group"
+									onClick={(e) => {
+										e.stopPropagation();
+										(
+											document.getElementById(
+												`options-${track.id}`,
+											) as HTMLDialogElement
+										).close();
+									}}
+								>
+									<span className="group-hover:scale-110 transition-transform">
+										Close
+									</span>
+								</button>
+							</form>
+						</div>
+					</div>
+				</dialog>,
+				document.body,
+			)}
+
+			{/* Details Modal */}
+			{createPortal(
+				<dialog
+					id={`track-${track.id}`}
+					className="modal modal-bottom sm:modal-middle"
+					onClick={(e) => {
+						if (e.target === e.currentTarget) {
+							e.stopPropagation();
+							(e.target as HTMLDialogElement).close();
+						}
+					}}
+					onKeyUp={(e) => {
+						e.stopPropagation();
+						if (e.key === "Escape") {
+							(e.target as HTMLDialogElement).close();
+						}
+					}}
+				>
+					<div
+						className="modal-box bg-base-300/95 backdrop-blur-xl border border-primary/20"
+						onClick={(e) => e.stopPropagation()}
+						onKeyUp={(e) => {
+							if (e.key === "Escape") {
+								(e.target as HTMLDialogElement).close();
+							}
+						}}
+						// biome-ignore lint/a11y/useSemanticElements: <explanation>
+						role="dialog"
+					>
+						<div className="relative">
+							<div className="absolute -top-6 -left-6 w-20 h-20 bg-primary/10 rounded-full blur-xl animate-pulse" />
+							<h3 className="font-bold text-xl mb-6 text-primary">
+								{track.title}
+							</h3>
+							<div className="space-y-4">
+								<div className="p-3 bg-base-100/50 rounded-lg backdrop-blur-sm">
+									<p className="text-sm opacity-70">Artists</p>
+									<p className="font-medium">{artists}</p>
+								</div>
+								<div className="p-3 bg-base-100/50 rounded-lg backdrop-blur-sm">
+									<p className="text-sm opacity-70">Tags</p>
+									<div className="flex flex-wrap gap-2 mt-1">
+										{tags.split(", ").map((tag: string) => (
+											<span
+												key={tag}
+												className="px-2 py-1 rounded-full bg-primary/20 text-sm
+												border border-primary/30 hover:scale-105 transition-transform"
+											>
+												{tag}
+											</span>
+										))}
+									</div>
+								</div>
+								<div className="p-3 bg-base-100/50 rounded-lg backdrop-blur-sm">
+									<p className="text-sm opacity-70">File Size</p>
+									<p className="font-medium">
+										{track.fileSize
+											? `${(track.fileSize / 1024 / 1024).toFixed(2)} MB`
+											: "Unknown"}
+									</p>
+								</div>
+							</div>
+							<div className="modal-action">
+								<form method="dialog">
+									<button
+										type="button"
+										className="btn btn-primary btn-outline group"
+										onClick={(e) => {
+											e.stopPropagation();
+											(
+												document.getElementById(
+													`track-${track.id}`,
+												) as HTMLDialogElement
+											).close();
+										}}
+									>
+										<span className="group-hover:scale-110 transition-transform">
+											Close
+										</span>
+									</button>
+								</form>
+							</div>
+						</div>
+					</div>
+				</dialog>,
+				document.body,
+			)}
+
+			{/* Edit Tags Modal */}
+			{createPortal(
+				<dialog
+					id={`edit-${track.id}`}
+					className="modal modal-bottom sm:modal-middle"
+					onClick={(e) => {
+						if (e.target === e.currentTarget) {
+							e.stopPropagation();
+							(e.target as HTMLDialogElement).close();
+						}
+					}}
+					onKeyUp={(e) => {
+						e.stopPropagation();
+						if (e.key === "Escape") {
+							(e.target as HTMLDialogElement).close();
+						}
+					}}
+				>
+					<div
+						className="modal-box bg-base-300/95 backdrop-blur-xl border border-primary/20"
+						onClick={(e) => e.stopPropagation()}
+						onKeyUp={(e) => {
+							e.stopPropagation();
+							if (e.key === "Escape") {
+								(e.target as HTMLDialogElement).close();
+							}
+						}}
+						// biome-ignore lint/a11y/useSemanticElements: <explanation>
+						role="dialog"
+					>
+						<div className="relative">
+							<h3 className="font-bold text-xl mb-6 text-primary">Edit Tags</h3>
+							<div className="space-y-4">
+								<div className="p-4 bg-base-100/50 rounded-lg backdrop-blur-sm">
+									<p className="text-sm opacity-70 mb-2">Current Tags</p>
+									<div className="flex flex-wrap gap-2">
+										{tags.split(", ").map((tag: string) => (
+											<span
+												key={tag}
+												className="px-3 py-1.5 rounded-full bg-primary/20 text-sm
+												border border-primary/30 hover:scale-105 transition-transform
+												hover:bg-primary/30 cursor-pointer"
+											>
+												{tag}
+												<span className="ml-2 opacity-70">×</span>
+											</span>
+										))}
+									</div>
+								</div>
+								<div className="p-4 bg-base-100/50 rounded-lg backdrop-blur-sm">
+									<input
+										type="text"
+										placeholder="Add new tag..."
+										className="input input-bordered w-full bg-base-100/50
+										focus:border-primary/50 transition-colors"
+									/>
+								</div>
+							</div>
+							<div className="modal-action flex gap-2">
+								<form method="dialog">
+									<button
+										type="button"
+										className="btn btn-ghost group"
+										onClick={(e) => {
+											e.stopPropagation();
+											(
+												document.getElementById(
+													`edit-${track.id}`,
+												) as HTMLDialogElement
+											).close();
+										}}
+									>
+										<span className="group-hover:scale-110 transition-transform">
+											Cancel
+										</span>
+									</button>
+								</form>
+								<button type="button" className="btn btn-primary group">
+									<span className="group-hover:scale-110 transition-transform">
+										Save Changes
+									</span>
+								</button>
+							</div>
+						</div>
+					</div>
+				</dialog>,
+				document.body,
+			)}
+		</>
+	);
+}

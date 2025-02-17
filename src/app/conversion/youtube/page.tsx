@@ -3,6 +3,13 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import type { FFmpeg } from "@ffmpeg/ffmpeg";
+import {
+	AudioWaveformIcon,
+	DownloadIcon,
+	HomeIcon,
+	Music4Icon,
+	PlaySquareIcon,
+} from "lucide-react";
 
 interface VideoInfo {
 	url: string;
@@ -199,95 +206,188 @@ export default function YoutubePage() {
 	};
 
 	return (
-		<main className="container mx-auto px-4 py-8">
-			<div className="max-w-4xl mx-auto">
-				<nav className="mb-8 breadcrumbs">
-					<ul>
-						<li>
-							<Link href="/" className="text-primary">
-								Home
-							</Link>
-						</li>
-						<li>
-							<Link href="/conversion" className="text-primary">
-								Conversion
-							</Link>
-						</li>
-						<li>YouTube to MP3</li>
-					</ul>
+		<main
+			className="min-h-screen bg-gradient-to-br from-purple-900 via-base-100 to-blue-900 
+		relative overflow-hidden"
+		>
+			{/* Animated background elements */}
+			<div className="absolute inset-0 opacity-20">
+				<div
+					className="absolute top-0 left-0 w-96 h-96 bg-primary/30 rounded-full 
+			filter blur-3xl animate-pulse"
+				/>
+				<div
+					className="absolute bottom-0 right-0 w-96 h-96 bg-secondary/30 
+			rounded-full filter blur-3xl animate-pulse delay-1000"
+				/>
+			</div>
+
+			<div className="container mx-auto px-4 py-8 relative z-10">
+				<nav className="mb-8 flex items-center gap-2 text-white/80">
+					<Link
+						href="/"
+						className="btn btn-ghost btn-circle hover:bg-white/10 transition-all"
+					>
+						<HomeIcon className="w-5 h-5" />
+					</Link>
+					<span className="text-white/50">/</span>
+					<Link
+						href="/conversion"
+						className="btn btn-ghost btn-circle hover:bg-white/10 transition-all"
+					>
+						<AudioWaveformIcon className="w-5 h-5" />
+					</Link>
+					<span className="text-white/50">/</span>
+					<span className="flex items-center gap-2">
+						<PlaySquareIcon className="w-5 h-5" /> to MP3
+					</span>
 				</nav>
 
-				<div className="card bg-base-200 shadow-xl">
-					<div className="card-body">
-						<h2 className="card-title mb-4">YouTube to MP3 Converter</h2>
-						<form onSubmit={handleUrlSubmit} className="space-y-4">
-							<div className="form-control">
-								<input
-									type="url"
-									placeholder="Enter YouTube URL"
-									className="input input-bordered w-full"
-									value={url}
-									onChange={(e) => setUrl(e.target.value)}
-									required
-									disabled={isLoading}
-								/>
+				<div className="max-w-4xl mx-auto">
+					<div
+						className="card backdrop-blur-xl bg-base-100/30 shadow-2xl 
+			  border border-white/10 overflow-hidden"
+					>
+						<div className="card-body">
+							<div className="flex items-center gap-4 mb-8">
+								<div
+									className="w-12 h-12 rounded-full bg-primary/20 flex items-center 
+					justify-center animate-pulse"
+								>
+									<Music4Icon className="w-6 h-6 text-primary" />
+								</div>
+								<h2
+									className="text-2xl font-bold bg-gradient-to-r from-primary 
+					to-secondary bg-clip-text text-transparent"
+								>
+									YouTube to MP3 Converter
+								</h2>
 							</div>
-							<button
-								type="submit"
-								className="btn btn-primary"
-								disabled={!ffmpegLoaded || !url.trim() || isLoading}
-							>
-								{isLoading ? (
-									<>
-										<span className="loading loading-spinner" />
-										<p>Converting...</p>
-									</>
-								) : (
-									"Convert to MP3"
-								)}
-							</button>
-						</form>
 
-						{videoInfo && (
-							<div className="mt-8 space-y-4">
-								{videoInfo.thumbnail && (
-									<img
-										src={videoInfo.thumbnail}
-										alt={videoInfo.title}
-										className="rounded-lg max-w-sm mx-auto"
+							<form onSubmit={handleUrlSubmit} className="space-y-6">
+								<div className="form-control relative group">
+									<input
+										type="url"
+										placeholder="Paste YouTube URL here"
+										className="input input-lg bg-base-200/50 backdrop-blur-sm 
+						border-white/10 w-full pl-12 focus:border-primary/50 
+						transition-all duration-300"
+										value={url}
+										onChange={(e) => setUrl(e.target.value)}
+										required
+										disabled={isLoading}
 									/>
-								)}
-								{videoInfo.title && (
-									<h3 className="text-lg font-semibold">{videoInfo.title}</h3>
-								)}
-								<div className="flex flex-col gap-2">
-									<div className="flex justify-between text-sm">
-										<span>
-											Status:{" "}
-											<span className="capitalize">{videoInfo.status}</span>
-										</span>
-										<span>{Math.round(videoInfo.progress)}%</span>
-									</div>
-									<progress
-										className="progress progress-primary w-full"
-										value={videoInfo.progress}
-										max="100"
+									<PlaySquareIcon
+										className="absolute left-4 top-1/2 -translate-y-1/2 
+					  w-5 h-5 text-white/50 group-focus-within:text-primary 
+					  transition-colors"
 									/>
 								</div>
-								{videoInfo.error && (
-									<div className="alert alert-error">{videoInfo.error}</div>
-								)}
-								{videoInfo.downloadUrl && (
-									<a
-										href={videoInfo.downloadUrl}
-										download={`${videoInfo.title}.mp3`}
-										className="btn btn-success w-full"
-									>
-										Download MP3
-									</a>
-								)}
-							</div>
-						)}
+								<button
+									type="submit"
+									className="btn btn-primary btn-lg w-full group relative 
+					  overflow-hidden"
+									disabled={!ffmpegLoaded || !url.trim() || isLoading}
+								>
+									<span className="relative z-10 flex items-center gap-2">
+										{isLoading ? (
+											<>
+												<span className="loading loading-spinner" />
+												<p>Converting...</p>
+											</>
+										) : (
+											<>
+												<AudioWaveformIcon className="w-5 h-5" />
+												Convert to MP3
+											</>
+										)}
+									</span>
+									<div
+										className="absolute inset-0 bg-gradient-to-r from-primary 
+					  to-secondary opacity-0 group-hover:opacity-100 transition-opacity"
+									/>
+								</button>
+							</form>
+
+							{videoInfo && (
+								<div className="mt-8 space-y-6 animate-fadeIn">
+									{videoInfo.thumbnail && (
+										<div className="relative group">
+											<img
+												src={videoInfo.thumbnail}
+												alt={videoInfo.title}
+												className="rounded-xl w-full max-w-sm mx-auto 
+							transform group-hover:scale-105 transition-transform 
+							duration-300"
+											/>
+											<div
+												className="absolute inset-0 bg-gradient-to-t 
+						  from-black/60 to-transparent rounded-xl opacity-0 
+						  group-hover:opacity-100 transition-opacity"
+											/>
+										</div>
+									)}
+
+									{videoInfo.title && (
+										<h3
+											className="text-xl font-bold text-center 
+						bg-gradient-to-r from-primary to-secondary 
+						bg-clip-text text-transparent"
+										>
+											{videoInfo.title}
+										</h3>
+									)}
+
+									<div className="space-y-3">
+										<div className="flex justify-between text-sm text-white/70">
+											<span className="flex items-center gap-2">
+												<span
+													className="w-2 h-2 rounded-full bg-primary 
+							animate-pulse"
+												/>
+												<span className="capitalize">{videoInfo.status}</span>
+											</span>
+											<span>{Math.round(videoInfo.progress)}%</span>
+										</div>
+										<div className="h-2 bg-base-200/30 rounded-full overflow-hidden">
+											<div
+												className="h-full bg-gradient-to-r from-primary to-secondary 
+							transition-all duration-300"
+												style={{ width: `${videoInfo.progress}%` }}
+											/>
+										</div>
+									</div>
+
+									{videoInfo.error && (
+										<div
+											className="alert alert-error bg-red-500/20 
+						backdrop-blur-sm border-red-500/30"
+										>
+											{videoInfo.error}
+										</div>
+									)}
+
+									{videoInfo.downloadUrl && (
+										<a
+											href={videoInfo.downloadUrl}
+											download={`${videoInfo.title}.mp3`}
+											className="btn btn-success btn-lg w-full group relative 
+						  overflow-hidden"
+										>
+											<span className="relative z-10 flex items-center gap-2">
+												<DownloadIcon className="w-5 h-5" />
+												Download MP3
+											</span>
+											<div
+												className="absolute inset-0 bg-gradient-to-r 
+						  from-green-500 to-emerald-500 opacity-0 
+						  group-hover:opacity-100 transition-opacity"
+											/>
+										</a>
+									)}
+								</div>
+							)}
+						</div>
 					</div>
 				</div>
 			</div>

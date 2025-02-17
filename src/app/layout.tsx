@@ -4,6 +4,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "./components/Navbar";
 import QueryProvider from "./providers/QueryProvider";
+import AutoAnimateProvider from "./components/AutoAnimateProvider";
+import Script from "next/script";
 
 const geistSans = localFont({
 	src: "./fonts/GeistVF.woff",
@@ -29,11 +31,16 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en">
+			<head>
+				<Script src="https://unpkg.com/@oddbird/popover-polyfill" />
+			</head>
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} ${inter.className} antialiased`}
 			>
 				<Navbar />
-				<QueryProvider>{children}</QueryProvider>
+				<QueryProvider>
+					<AutoAnimateProvider>{children}</AutoAnimateProvider>
+				</QueryProvider>
 			</body>
 		</html>
 	);

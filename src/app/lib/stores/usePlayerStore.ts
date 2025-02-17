@@ -115,25 +115,38 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
                 set({
                     duration: howl.duration(),
-                    bpm: track.bpm || 120,
+                    bpm: track.bpm ?? 120,
                 });
             },
             onplay: () => {
                 set({ isPlaying: true });
                 get().startBeatPulse();
+
+                // Start progress tracking
+                const updateProgress = () => {
+                    if (get().isPlaying) {
+                        set({ progress: howl.seek() });
+                        requestAnimationFrame(updateProgress);
+                    }
+                };
+                updateProgress();
             },
             onpause: () => {
                 set({ isPlaying: false });
                 get().stopBeatPulse();
             },
             onstop: () => {
-                set({ isPlaying: false });
+                set({ isPlaying: false, progress: 0 });
                 get().stopBeatPulse();
             },
             onend: () => {
+                set({ progress: 0 });
                 get().stopBeatPulse();
                 get().playNext();
             },
+            onseek: () => {
+                set({ progress: howl.seek() });
+            }
         });
 
         set({
